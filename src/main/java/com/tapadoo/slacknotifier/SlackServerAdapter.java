@@ -110,10 +110,20 @@ public class SlackServerAdapter extends BuildServerAdapter {
 
         Duration buildDuration = new Duration(1000*build.getDuration());
 
-        message = String.format("Project '%s' build failed! ( %s )" , build.getFullName() , durationFormatter.print(buildDuration.toPeriod()));
+        message += java.lang.String.format("Project '<a href='%s'>%s</a>'", getBuildUrl(build), build.getFullName());
+
+        Branch branch = build.getBranch();
+
+        if (branch != null) {
+            message += String.format(" (%s)", branch.getDisplayName());
+        }
+
+        message += String.format(" build failed! ( %d )", durationFormatter.print(buildDuration.toPeriod()));
 
         postToSlack(build, message, false);
     }
+
+    private String getBuildUrl(SRunningBuild build) { return buildServer.getRootUrl() + "/viewLog.html?buildId=" + build.getBuildId(); }
 
     private void processSuccessfulBuild(SRunningBuild build) {
 
