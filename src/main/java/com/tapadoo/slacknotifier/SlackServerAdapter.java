@@ -88,7 +88,7 @@ public class SlackServerAdapter extends BuildServerAdapter {
     private void postStartedBuild(SRunningBuild build )
     {
         //Could put other into here. Agents maybe?
-        String message = String.format("Project '%s' build started." , build.getFullName());
+        String message = String.format("Project '%s' build started.", getBuildLink(build));
         postToSlack(build, message, true);
     }
     private void postFailureBuild(SRunningBuild build )
@@ -110,20 +110,10 @@ public class SlackServerAdapter extends BuildServerAdapter {
 
         Duration buildDuration = new Duration(1000*build.getDuration());
 
-        message += java.lang.String.format("Project '<a href='%s'>%s</a>'", getBuildUrl(build), build.getFullName());
-
-        Branch branch = build.getBranch();
-
-        if (branch != null) {
-            message += String.format(" (%s)", branch.getDisplayName());
-        }
-
-        message += String.format(" build failed! ( %d )", durationFormatter.print(buildDuration.toPeriod()));
+        message = String.format("Project '%s' build failed! ( %s )", getBuildLink(build), durationFormatter.print(buildDuration.toPeriod()));
 
         postToSlack(build, message, false);
     }
-
-    private String getBuildUrl(SRunningBuild build) { return buildServer.getRootUrl() + "/viewLog.html?buildId=" + build.getBuildId(); }
 
     private void processSuccessfulBuild(SRunningBuild build) {
 
@@ -144,7 +134,7 @@ public class SlackServerAdapter extends BuildServerAdapter {
 
         Duration buildDuration = new Duration(1000*build.getDuration());
 
-        message = String.format("Project '%s' built successfully in %s." , build.getFullName() , durationFormatter.print(buildDuration.toPeriod()));
+        message = String.format("Project '%s' built successfully in %s.", getBuildLink(build), durationFormatter.print(buildDuration.toPeriod()));
 
         postToSlack(build, message, true);
     }
@@ -199,15 +189,10 @@ public class SlackServerAdapter extends BuildServerAdapter {
 
                     if( commiterName != null && !commiterName.equals(""))
                     {
+                        if (committersString.length() > 0) { committersString.append(", "); }
                         committersString.append(commiterName);
-                        committersString.append(",");
                     }
                 }
-            }
-
-            if( committersString.length() > 0 )
-            {
-                committersString.deleteCharAt(committersString.length()-1); //remove the last ,
             }
 
             String commitMsg = committersString.toString();
@@ -269,4 +254,31 @@ public class SlackServerAdapter extends BuildServerAdapter {
         }
     }
 
+    private String getBuildLink(SRunningBuild build) {
+        return String.format("<%s|%s>", getBuildUrl(build), getBuildName(build));
+    }
+
+    private String getBuildName(SRunningBuild build) {
+        String branch = getBranchName(build);
+
+        if (branch != null && !branch.equals("master")) {
+            return String.format("%s :: %s", build.getFullName(), branch);
+        }
+
+        return build.getFullName();
+    }
+
+    private String getBuildUrl(SRunningBuild build) {
+        return buildServer.getRootUrl() + "/viewLog.html?buildId=" + build.getBuildId();
+    }
+
+    private String getBranchName(SRunningBuild build) {
+        Branch branch = build.getBranch();
+
+        if (branch == null) {
+            return null;
+        }
+
+        return branch.getDisplayName();
+    }
 }
