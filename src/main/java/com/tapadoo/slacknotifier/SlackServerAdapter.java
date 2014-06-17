@@ -259,10 +259,10 @@ public class SlackServerAdapter extends BuildServerAdapter {
     }
 
     private String getBuildName(SRunningBuild build) {
-        String branch = getBranchName(build);
+        Branch branch = build.getBranch();
 
-        if (branch != null && !branch.equals("master")) {
-            return String.format("%s :: %s", build.getFullName(), branch);
+        if (branch != null) {
+            return String.format("%s :: %s", build.getFullName(), branch.getDisplayName());
         }
 
         return build.getFullName();
@@ -270,15 +270,5 @@ public class SlackServerAdapter extends BuildServerAdapter {
 
     private String getBuildUrl(SRunningBuild build) {
         return buildServer.getRootUrl() + "/viewLog.html?buildId=" + build.getBuildId();
-    }
-
-    private String getBranchName(SRunningBuild build) {
-        Branch branch = build.getBranch();
-
-        if (branch == null) {
-            return null;
-        }
-
-        return branch.getDisplayName();
     }
 }
