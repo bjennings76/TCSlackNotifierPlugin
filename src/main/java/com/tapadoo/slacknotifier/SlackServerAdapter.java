@@ -93,6 +93,11 @@ public class SlackServerAdapter extends BuildServerAdapter {
     }
     private void postFailureBuild(SRunningBuild build )
     {
+        // If a failed build has no duration, then it didn't even start.
+        // This is usually due to a build dependency failure which has
+        // already given notice, so skip the duplicate notification.
+        if (build.getDuration() < 1) { return; }
+
         String message = "";
 
         PeriodFormatter durationFormatter = new PeriodFormatterBuilder()
